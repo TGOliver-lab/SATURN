@@ -891,7 +891,7 @@ if __name__ == '__main__':
     parser.add_argument('--in_data', type=str,
                         help='Path to csv containing input datas and species')
     parser.add_argument('--device', type=str,
-                    help='Set GPU/CPU')
+                    help='Set GPU/CPU/MPS')
     parser.add_argument('--device_num', type=int,
                         help='Set GPU Number')
     parser.add_argument('--time_stamp', type=bool,
@@ -1002,9 +1002,9 @@ if __name__ == '__main__':
         in_data=None,
         org='saturn',
         in_label_col=None,
-        ref_label_col="CL_class_coarse",
+        ref_label_col="cell_type",
         non_species_batch_col=None,
-        ct_map_path='/dfs/project/cross-species/yanay/fz_true_ct.csv',
+        ct_map_path='',
         device= torch.device("cuda" if torch.cuda.is_available() else "cpu"),
         device_num=0,
         pretrain_batch_size=4096,
@@ -1047,7 +1047,11 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
-    torch.cuda.set_device(args.device_num)
+    if not torch.backends.mps.is_available():
+        torch.cuda.set_device(args.device_num)
+    elif torch.backends.mps.is_available() or args.device == 'MPS':
+        args.device = torch.device("mps")
+        print("Using MPS Device (detected Apple silicon)")
     print(f"Using Device {args.device_num}")
     # Numpy seed
     np.random.seed(args.seed)

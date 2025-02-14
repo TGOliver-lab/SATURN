@@ -7,55 +7,63 @@ import torch
 from scanpy import AnnData
 import numpy as np
 
-
-EMBEDDING_DIR = Path('/dfs/project/cross-species/data/proteome/embeddings')
-FZ_EMBEDDING_DIR = Path('/dfs/project/cross-species/yanay/data/proteome/embeddings')
-MODEL_TO_SPECIES_TO_GENE_EMBEDDING_PATH = {
-    'ESM1b': {
-        'human': EMBEDDING_DIR / 'Homo_sapiens.GRCh38.gene_symbol_to_embedding_ESM1b.pt',
-        'mouse': EMBEDDING_DIR / 'Mus_musculus.GRCm39.gene_symbol_to_embedding_ESM1b.pt',
-        'frog': FZ_EMBEDDING_DIR / 'Xenopus_tropicalis.Xenopus_tropicalis_v9.1.gene_symbol_to_embedding_ESM1b.pt',
-        #'frog': FZ_EMBEDDING_DIR / 'new_frog/xtropProtein.fasta.1.gene_symbol_to_embedding_ESM1b.pt',
-        'zebrafish': FZ_EMBEDDING_DIR / 'Danio_rerio.GRCz11.gene_symbol_to_embedding_ESM1b.pt',
-        'bat':  FZ_EMBEDDING_DIR / 'Rhinolophus_ferrumequinum.mRhiFer1_v1.gene_symbol_to_embedding_ESM1b.pt',
-        "mouse_lemur": FZ_EMBEDDING_DIR / "Microcebus_murinus.Mmur_3.0.gene_symbol_to_embedding_ESM1b.pt",
-        "sea_squirt": FZ_EMBEDDING_DIR / 'Ciona_intestinalis.KH.gene_symbol_to_embedding_ESM1b.pt',
-        "chicken": FZ_EMBEDDING_DIR / 'Gallus_gallus.GRCg6a.gene_symbol_to_embedding_ESM1b.pt',
-        "fly": FZ_EMBEDDING_DIR / 'Drosophila_melanogaster.BDGP6.32.gene_symbol_to_embedding_ESM1b.pt',
-        "pig": FZ_EMBEDDING_DIR / 'Sus_scrofa.Sscrofa11.1.gene_symbol_to_embedding_ESM1b.pt',
-        "macaca_fascicularis": FZ_EMBEDDING_DIR / 'Macaca_fascicularis.Macaca_fascicularis_6.0.gene_symbol_to_embedding_ESM1b.pt',
-        "macaca_mulatta": FZ_EMBEDDING_DIR / 'Macaca_mulatta.Mmul_10.gene_symbol_to_embedding_ESM1b.pt',
-        "rat": FZ_EMBEDDING_DIR / 'Rattus_norvegicus.mRatBN7.2.gene_symbol_to_embedding_ESM1b.pt',
-        "tree_shrew": FZ_EMBEDDING_DIR / 'Tupaia_belangeri.TREESHREW.gene_symbol_to_embedding_ESM1b.pt',
+def get_gene_embedding_path(species: list = ['human','mouse'], model: str = 'protXL', base_embedding_path: str = '') -> Dict[str, Path]:
+    if len(model) != 1:
+        raise ValueError("get_gene_embedding_path error: model must be a single string")
+    paths = []
+    for species in species:
+        paths.append(Path(base_embedding_path,model,f'{species}_embedding.torch'))
+    return dict(zip(species, paths))
         
-    },
-    'MSA1b': {
-        'human': EMBEDDING_DIR / 'Homo_sapiens.GRCh38.gene_symbol_to_embedding_MSA1b.pt',
-        'mouse': EMBEDDING_DIR / 'Mus_musculus.GRCm39.gene_symbol_to_embedding_MSA1b.pt'
-    },
-    "protXL": {
-        'human': FZ_EMBEDDING_DIR / 'Homo_sapiens.GRCh38.gene_symbol_to_embedding_protxl.pt',
-        'mouse': FZ_EMBEDDING_DIR / 'Mus_musculus.GRCm39.gene_symbol_to_embedding_protxl.pt',
-        'frog': FZ_EMBEDDING_DIR / 'Xenopus_tropicalis.Xenopus_tropicalis_v9.1.gene_symbol_to_embedding_protxl.pt',
-        'zebrafish': FZ_EMBEDDING_DIR / 'Danio_rerio.GRCz11.gene_symbol_to_embedding_protxl.pt',
-    },
-    "ESM1b_protref": {
-        'human': FZ_EMBEDDING_DIR / 'human.protref.gene_symbol_to_embedding_ESM1b.pt',
-        'mouse': FZ_EMBEDDING_DIR / 'mouse.protref.gene_symbol_to_embedding_ESM1b.pt',
-        'frog': FZ_EMBEDDING_DIR / 'frog.protref.gene_symbol_to_embedding_ESM1b.pt',
-        'zebrafish': FZ_EMBEDDING_DIR / 'zebrafish.protref.gene_symbol_to_embedding_ESM1b.pt',
-    },
-    'ESM2': {
-        'human': FZ_EMBEDDING_DIR / 'Homo_sapiens.GRCh38.gene_symbol_to_embedding_ESM2.pt',
-        'mouse': FZ_EMBEDDING_DIR / 'Mus_musculus.GRCm39.gene_symbol_to_embedding_ESM2.pt',
-        'frog': FZ_EMBEDDING_DIR / 'Xenopus_tropicalis.Xenopus_tropicalis_v9.1.gene_symbol_to_embedding_ESM2.pt',
-        'zebrafish': FZ_EMBEDDING_DIR / 'Danio_rerio.GRCz11.gene_symbol_to_embedding_ESM2.pt',
-        "mouse_lemur": FZ_EMBEDDING_DIR / "Microcebus_murinus.Mmur_3.0.gene_symbol_to_embedding_ESM2.pt",
-        "pig": FZ_EMBEDDING_DIR / 'Sus_scrofa.Sscrofa11.1.gene_symbol_to_embedding_ESM2.pt',
-        "macaca_fascicularis": FZ_EMBEDDING_DIR / 'Macaca_fascicularis.Macaca_fascicularis_6.0.gene_symbol_to_embedding_ESM2.pt',
-        "macaca_mulatta": FZ_EMBEDDING_DIR / 'Macaca_mulatta.Mmul_10.gene_symbol_to_embedding_ESM2.pt',
-    },
-}
+# EMBEDDING_DIR = ''
+
+# MODEL_TO_SPECIES_TO_GENE_EMBEDDING_PATH = {
+#     'ESM1b': {
+#         'human': EMBEDDING_DIR / 'Homo_sapiens.GRCh38.gene_symbol_to_embedding_ESM1b.pt',
+#         'mouse': EMBEDDING_DIR / 'Mus_musculus.GRCm39.gene_symbol_to_embedding_ESM1b.pt',
+#         'frog': FZ_EMBEDDING_DIR / 'Xenopus_tropicalis.Xenopus_tropicalis_v9.1.gene_symbol_to_embedding_ESM1b.pt',
+#         #'frog': FZ_EMBEDDING_DIR / 'new_frog/xtropProtein.fasta.1.gene_symbol_to_embedding_ESM1b.pt',
+#         'zebrafish': FZ_EMBEDDING_DIR / 'Danio_rerio.GRCz11.gene_symbol_to_embedding_ESM1b.pt',
+#         'bat':  FZ_EMBEDDING_DIR / 'Rhinolophus_ferrumequinum.mRhiFer1_v1.gene_symbol_to_embedding_ESM1b.pt',
+#         "mouse_lemur": FZ_EMBEDDING_DIR / "Microcebus_murinus.Mmur_3.0.gene_symbol_to_embedding_ESM1b.pt",
+#         "sea_squirt": FZ_EMBEDDING_DIR / 'Ciona_intestinalis.KH.gene_symbol_to_embedding_ESM1b.pt',
+#         "chicken": FZ_EMBEDDING_DIR / 'Gallus_gallus.GRCg6a.gene_symbol_to_embedding_ESM1b.pt',
+#         "fly": FZ_EMBEDDING_DIR / 'Drosophila_melanogaster.BDGP6.32.gene_symbol_to_embedding_ESM1b.pt',
+#         "pig": FZ_EMBEDDING_DIR / 'Sus_scrofa.Sscrofa11.1.gene_symbol_to_embedding_ESM1b.pt',
+#         "macaca_fascicularis": FZ_EMBEDDING_DIR / 'Macaca_fascicularis.Macaca_fascicularis_6.0.gene_symbol_to_embedding_ESM1b.pt',
+#         "macaca_mulatta": FZ_EMBEDDING_DIR / 'Macaca_mulatta.Mmul_10.gene_symbol_to_embedding_ESM1b.pt',
+#         "rat": FZ_EMBEDDING_DIR / 'Rattus_norvegicus.mRatBN7.2.gene_symbol_to_embedding_ESM1b.pt',
+#         "tree_shrew": FZ_EMBEDDING_DIR / 'Tupaia_belangeri.TREESHREW.gene_symbol_to_embedding_ESM1b.pt',
+        
+#     },
+#     'MSA1b': {
+#         'human': EMBEDDING_DIR / 'Homo_sapiens.GRCh38.gene_symbol_to_embedding_MSA1b.pt',
+#         'mouse': EMBEDDING_DIR / 'Mus_musculus.GRCm39.gene_symbol_to_embedding_MSA1b.pt'
+#     },
+#     "protXL": {
+#         'human': FZ_EMBEDDING_DIR / 'Homo_sapiens.GRCh38.gene_symbol_to_embedding_protxl.pt',
+#         'mouse': FZ_EMBEDDING_DIR / 'Mus_musculus.GRCm39.gene_symbol_to_embedding_protxl.pt',
+#         'frog': FZ_EMBEDDING_DIR / 'Xenopus_tropicalis.Xenopus_tropicalis_v9.1.gene_symbol_to_embedding_protxl.pt',
+#         'zebrafish': FZ_EMBEDDING_DIR / 'Danio_rerio.GRCz11.gene_symbol_to_embedding_protxl.pt',
+#     },
+#     "ESM1b_protref": {
+#         'human': FZ_EMBEDDING_DIR / 'human.protref.gene_symbol_to_embedding_ESM1b.pt',
+#         'mouse': FZ_EMBEDDING_DIR / 'mouse.protref.gene_symbol_to_embedding_ESM1b.pt',
+#         'frog': FZ_EMBEDDING_DIR / 'frog.protref.gene_symbol_to_embedding_ESM1b.pt',
+#         'zebrafish': FZ_EMBEDDING_DIR / 'zebrafish.protref.gene_symbol_to_embedding_ESM1b.pt',
+#     },
+#     'ESM2': {
+#         'human': FZ_EMBEDDING_DIR / 'Homo_sapiens.GRCh38.gene_symbol_to_embedding_ESM2.pt',
+#         'mouse': FZ_EMBEDDING_DIR / 'Mus_musculus.GRCm39.gene_symbol_to_embedding_ESM2.pt',
+#         'frog': FZ_EMBEDDING_DIR / 'Xenopus_tropicalis.Xenopus_tropicalis_v9.1.gene_symbol_to_embedding_ESM2.pt',
+#         'zebrafish': FZ_EMBEDDING_DIR / 'Danio_rerio.GRCz11.gene_symbol_to_embedding_ESM2.pt',
+#         "mouse_lemur": FZ_EMBEDDING_DIR / "Microcebus_murinus.Mmur_3.0.gene_symbol_to_embedding_ESM2.pt",
+#         "pig": FZ_EMBEDDING_DIR / 'Sus_scrofa.Sscrofa11.1.gene_symbol_to_embedding_ESM2.pt',
+#         "macaca_fascicularis": FZ_EMBEDDING_DIR / 'Macaca_fascicularis.Macaca_fascicularis_6.0.gene_symbol_to_embedding_ESM2.pt',
+#         "macaca_mulatta": FZ_EMBEDDING_DIR / 'Macaca_mulatta.Mmul_10.gene_symbol_to_embedding_ESM2.pt',
+#     },
+# }
+
 
 def load_gene_embeddings_adata(adata: AnnData, species: list, embedding_model: str, embedding_path: str = None) -> Tuple[AnnData, Dict[str, torch.FloatTensor]]:
     """Loads gene embeddings for all the species/genes in the provided data.
@@ -75,7 +83,7 @@ def load_gene_embeddings_adata(adata: AnnData, species: list, embedding_model: s
 
     if embedding_path is None:
         # Get embedding paths for the model
-        species_to_gene_embedding_path = MODEL_TO_SPECIES_TO_GENE_EMBEDDING_PATH[embedding_model]
+        species_to_gene_embedding_path = get_gene_embedding_path(species=species_names, model=embedding_model, base_embedding_path=embedding_path)
         available_species = set(species_to_gene_embedding_path)
 
         # Ensure embeddings are available for all species
